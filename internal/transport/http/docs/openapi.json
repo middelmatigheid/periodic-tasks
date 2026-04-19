@@ -1,0 +1,703 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Task Service API",
+    "version": "1.0.0",
+    "description": "CRUD API for tasks built with clean architecture."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Tasks",
+      "description": "Operations with tasks"
+    },
+    {
+      "name": "Task generators",
+      "description": "Operations with task generators"
+    }
+  ],
+  "paths": {
+    "/api/v1/tasks": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "List tasks",
+        "description": "Returns list of tasks that meet on specified filters",
+        "parameters": [
+          {
+            "name": "doctor_id",
+            "in": "query",
+            "description": "A doctor's ID to whom tasks assigned",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "A current status of a task",
+            "required": false,
+            "schema": { "type": "string", "enum": ["", "new", "in_progress", "done"], "example": "new" }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "A start date filters tasks whose due date is on or after specified date",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "example": "2026-03-24T00:00:00Z" }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "An end date filters tasks whose due date is on or before specified date",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "example": "2026-03-24T00:00:00Z" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page to turn because a response returns a maximum of 10 tasks",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64", "minimum": 0 }
+          },
+          {
+            "name": "generator_id",
+            "in": "query",
+            "description": "A generator's ID which generated tasks",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Task" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Tasks"],
+        "summary": "Create task",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created task",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "Get task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Tasks"],
+        "summary": "Update task",
+        "description": "All fields should be provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated task",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Tasks"],
+        "summary": "partially update task",
+        "description": "Only specified fileds will be updated",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated task",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Tasks"],
+        "summary": "Delete task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/task_generators": {
+      "get": {
+        "tags": ["Task generators"],
+        "summary": "List task generators",
+        "description": "Returns list of task generators that meet on specified filters",
+        "parameters": [
+          {
+            "name": "doctor_id",
+            "in": "query",
+            "description": "A doctor's ID to whom tasks assigned",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "A current status of a task",
+            "required": false,
+            "schema": { "type": "string", "enum": ["", "new", "in_progress", "done"], "example": "new" }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "A start date filters tasks whose next due date is on or after specified date",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "example": "2026-03-24T00:00:00Z" }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "An end date filters tasks whose next due date is on or before specified date",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "example": "2026-03-24T00:00:00Z" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page to turn because a response returns a maximum of 10 tasks",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64", "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task generators list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TaskGenerator" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Task generators"],
+        "summary": "Create task generator",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTaskGeneratorRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created task generator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TaskGenerator" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v1/task_generators/{id}": {
+      "get": {
+        "tags": ["Task generators"],
+        "summary": "Get task generator by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task generator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TaskGenerator" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Task generators"],
+        "summary": "Update task generator",
+        "description": "All fields should be provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTaskGeneratorRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated task generator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TaskGenerator" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Task generators"],
+        "summary": "partially update task generator",
+        "description": "Only specified fileds will be updated",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTaskGeneratorRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated task generator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TaskGenerator" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Task generators"],
+        "summary": "Delete task generator",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    }, 
+    "/api/v1/task_generators/generate/{id}": {
+      "get": {
+        "tags": ["Task generators"],
+        "summary": "Generate task by generator ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Task" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CreateTaskRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string",
+            "example": "Prepare release"
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "UpdateTaskRequest": {
+        "type": "object",
+        "required": ["title", "status"],
+        "properties": {
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string",
+            "example": "Prepare release"
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "in_progress"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer", 
+            "format": "int64", 
+            "example": 1 
+          },
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string", 
+            "example": "Prepare release" 
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          },
+          "generator_id": {
+            "type": "integer", 
+            "format": "int64",
+            "description": "A generator's ID which created this task",
+            "example": "1"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "CreateTaskGeneratorRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string",
+            "example": "Prepare release"
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "every_n_days": {
+            "type": "int64",
+            "example": "1"
+          },
+          "every_ith_day": {
+            "type": "int64",
+            "example": "1"
+          },
+          "parity": {
+            "type": "bool",
+            "example": "true"
+          },
+          "next_due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "UpdateTaskGeneratorRequest": {
+        "type": "object",
+        "required": ["title", "status"],
+        "properties": {
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string",
+            "example": "Prepare release"
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "every_n_days": {
+            "type": "int64",
+            "example": "1"
+          },
+          "every_ith_day": {
+            "type": "int64",
+            "example": "1"
+          },
+          "parity": {
+            "type": "bool",
+            "example": "true"
+          },
+          "next_due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "TaskGenerator": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer", 
+            "format": "int64", 
+            "example": 1 
+          },
+          "doctor_id": {
+            "type": "integer", 
+            "format": "int64",
+            "example": "1"
+          },
+          "title": {
+            "type": "string", 
+            "example": "Prepare release" 
+          },
+          "description": {
+            "type": "string",
+            "example": "Collect release notes and check migrations"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "every_n_days": {
+            "type": "int64",
+            "example": "1"
+          },
+          "every_ith_day": {
+            "type": "int64",
+            "example": "1"
+          },
+          "parity": {
+            "type": "bool",
+            "example": "true"
+          },
+          "next_due_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-24T00:00:00Z"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "task not found" }
+        }
+      }
+    }
+  }
+}
