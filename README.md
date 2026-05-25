@@ -80,7 +80,7 @@ The api would be available via http://localhost:8080/swagger/
 # Project structure
 
 ```bash
-medods/
+periodic-tasks/
 ├── cmd/api/main.go                         # Main server to run
 ├── internal/                 
 │   ├── domain/                             # Task and task generator templates
