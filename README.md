@@ -1,4 +1,4 @@
-# MEDODS
+# Periodic tasks
 
 [![Go](https://img.shields.io/badge/Go-123?logo=go)](https://go.dev/)
 [![Database](https://img.shields.io/badge/Postgres-119?logo=postgresql)](https://www.postgresql.org/)
